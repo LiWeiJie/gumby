@@ -5,9 +5,9 @@ set -x
 
 cd /var/scratch/pouwelse/jenkins/workspace/pers/consensus_thesis_kcong/consensus-thesis-code
 
-# substitute the SED_+ words
-# sed -i "s/SED_N/$n/" gumby/experiments/kc1212/run.sh
-# sed -i "s/SED_T/$t/" gumby/experiments/kc1212/run.sh
-# sed -i "s/SED_TRACKER_IP/$(hostname)/" gumby/experiments/kc1212/run.sh
-python -m src.node 0 SED_N SED_T -v --discovery SED_TRACKER_IP
+export LIBRARY_PATH="$LIBRARY_PATH:/home/pouwelse/erasure/lib"
+export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/home/pouwelse/erasure/lib"
+
+# .e.g python -m src.node 0 4 1 -v --discovery 127.0.0.1 --fan-out 10 --consensus-delay 90
+NODE_COMMAND
 

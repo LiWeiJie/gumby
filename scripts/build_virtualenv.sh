@@ -515,21 +515,22 @@ easy_install pip
 CFLAGS="$CFLAGS -I$VENV/include" LDFLAGS="$LDFLAGS -L$VENV/lib" pip install --upgrade cffi
 
 echo "
-appdirs==1.4.0
-attrs==16.3.0
-Automat==0.5.0
-constantly==15.1.0
-enum34==1.1.6
-incremental==16.10.1
-packaging==16.8
-pyparsing==2.1.10
-six==1.10.0
-Twisted==17.1.0
-zope.interface==4.3.3
-pytest==3.0.6
-libnacl==1.5.0
-typing==3.5.3.0
-jsonpickle==0.9.4
+appdirs
+attrs
+Automat
+constantly
+enum34
+incremental
+packaging
+pyparsing
+six
+Twisted
+zope.interface
+pytest
+libnacl
+typing
+jsonpickle
+pyeclib
 " > ~/requirements.txt
 
 # For some reason the pip scripts get a python 2.6 shebang, fix it.

@@ -8,6 +8,11 @@ cd /var/scratch/pouwelse/jenkins/workspace/pers/consensus_thesis_kcong/consensus
 export LIBRARY_PATH="$LIBRARY_PATH:/home/pouwelse/erasure/lib"
 export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/home/pouwelse/erasure/lib"
 
+# debug
+printenv
+pwd
+echo "$OUTPUT_DIR"
+
 # .e.g python -m src.node 0 4 1 -v --discovery 127.0.0.1 --fan-out 10 --consensus-delay 90
 NODE_COMMAND
 

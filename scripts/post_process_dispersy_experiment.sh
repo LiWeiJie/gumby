@@ -37,7 +37,7 @@
 
 # Code:
 
-set -ex
+set -e
 
 # Step 1: Look for non-empty stderr files and print its contents
 
@@ -99,16 +99,6 @@ bl.r
 export XMIN
 export XMAX
 graph_data.sh
-
-#Step 6: Check historical data for large deviation
-
-# @CONF DISPERSY_CHECK_HISTORY_DEVIATION: Invoke the script that checks previous jobs, computes historical values and checks whether they deviate significantly from the current run. (Default: False)
-if [ "${DISPERSY_CHECK_HISTORY_DEVIATION,,}" != "true" ]; then
-    echo "NOT invoking history deviation script"
-else
-    echo "Invoking history deviation script"
-    post_process_historical_values.py
-fi
 
 #
 # post_process_dispersy_experiment.sh ends here

@@ -57,12 +57,10 @@ modify_annotations.py . $XSTART
 
 # Graph the stuff
 export R_SCRIPTS_TO_RUN="\
-autoplot.r
 cputimes.r
 memtimes.r
 writebytes.r
 readbytes.r
-network.r
 "
 export XMIN
 export XMAX

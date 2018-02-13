@@ -1,30 +1,14 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # Mircea Bardac
 # Rewritten by Elric Milon (Dec. 2012 and Aug. 2013)
 
-import exceptions
-import json
+import subprocess
+from time import sleep, time
+from os import setpgrp, getpgrp, killpg, getpid, access, R_OK, path, kill, errno, sysconf, sysconf_names, setsid, getpgid, makedirs
+from signal import SIGKILL, SIGTERM, signal
 from glob import iglob
 from math import ceil
-from os import (R_OK, access, errno, getpgid, getpid, kill, killpg, makedirs, mkdir, path, setsid, sysconf,
-                sysconf_names)
-from signal import SIGKILL, SIGTERM, signal
-from subprocess import Popen
-from time import sleep, time
-
-from psutil import Process, AccessDenied, NoSuchProcess
-
-OK_EXIT_CODE = 0
-TIMEOUT_EXIT_CODE = 3
-COMMANDS_FAILED_EXIT_CODE = 5
-
-
-class PGPopen(Popen):
-
-    def __init__(self, cmd, *args, **kwargs):
-        self.cmd = cmd
-        super(PGPopen, self).__init__(cmd, *args, **kwargs)
-
+import json
 
 class ResourceMonitor(object):
     # adapted after http://stackoverflow.com/questions/276052/how-to-get-current-cpu-and-ram-usage-in-python
@@ -34,8 +18,6 @@ class ResourceMonitor(object):
 
         self.cmd_counter = 0
         self.pid_dict = {}
-
-        self.failed_commands = {}
 
         self.files = []
         self.output_dir = output_dir
@@ -52,8 +34,6 @@ class ResourceMonitor(object):
         self.ignore_pid_list.append(getpid())
 
         self.last_died = False
-
-        self.verbose = True
 
     def prune_pid_list(self):
         """
@@ -81,12 +61,7 @@ class ResourceMonitor(object):
 
         for pid in pids_to_remove:
             if pid in self.pid_dict:
-                p = self.pid_dict.pop(pid)
-                status = p.poll()
-                if self.verbose:
-                    print "Command:\n\t %s\n\t exited with status: %d" % (p.cmd, status)
-                if status:
-                    self.failed_commands[pid] = (p.cmd, status)
+                del self.pid_dict[pid]
             if pid in self.pid_list:
                 self.pid_list.remove(pid)
 
@@ -127,16 +102,6 @@ class ResourceMonitor(object):
                 if not self.pid_list:
                     self.last_died = True
 
-    def get_network_stats(self):
-        # Skip first two lines.
-        network = open('/proc/net/dev').readlines()[2:]
-        for line in network:
-            # Remove unnecessary whitespace within line.
-            shortline = ' '.join(line.split())
-            # Strip to remove leading space.
-            # and remove ':' after network device name.
-            yield shortline.replace(':', '').strip()
-
     def is_everyone_dead(self):
         return self.last_died or not self.pid_list
 
@@ -172,7 +137,7 @@ class ResourceMonitor(object):
         print >> stdout, "Starting #%05d: %s" % (self.cmd_counter, cmd)
         if stdout:
             stdout.flush()
-        p = PGPopen(cmd, shell=True, stdout=stdout, stderr=stderr, close_fds=True, env=None, preexec_fn=setsid)
+        p = subprocess.Popen(cmd, shell=True, stdout=stdout, stderr=stderr, close_fds=True, env=None, preexec_fn=setsid)
         self.pid_dict[p.pid] = p
         self.pgid_list.append(getpgid(p.pid))
 
@@ -188,13 +153,7 @@ class ResourceMonitor(object):
 
         self.prune_pid_list()
         for id, p in self.pid_dict.items():
-            print "TERMinating group. Still %i process(es) running:" % len(self.pid_dict)
-            for pid in self.get_pid_list():
-                try:
-                    with open("/proc/%d/cmdline" % pid, 'r') as cmd:
-                        print " - %s" % cmd.read()
-                except exceptions.IOError:
-                    pass
+            print "TERMinating group. Still %i process(es) running." % len(self.pid_dict)
             killpg(id, SIGTERM)  # kill the entire process group, we are ignoring the SIGTERM.
 
         if self.pid_dict:
@@ -209,35 +168,16 @@ class ResourceMonitor(object):
     def get_pid_list(self):
         return self.pid_dict.keys()
 
-    def get_failed_commands(self):
-        return self.failed_commands.copy()
-
 
 class ProcessMonitor(object):
-
-    def __init__(self, commands, timeout, interval, output_dir=None, monitor_dir=None, network=False):
+    def __init__(self, commands, timeout, interval, output_dir=None, monitor_dir=None):
         self.start_time = time()
-        self.timed_out = False
         self.end_time = self.start_time + timeout if timeout else 0  # Do not time out if time_limit is 0.
         self._interval = interval
 
         self._rm = ResourceMonitor(output_dir, commands)
-        self.monitor_file = None
-        self.network_monitor_file = None
-        self.fd_file = None
-        self.threads_file = None
-        self.psutil_process = Process()
-
         if monitor_dir:
             self.monitor_file = open(monitor_dir + "/resource_usage.log", "w", (1024 ** 2) * 10)  # Set the file's buffering to 10MB
-            if not path.exists(monitor_dir + "/autoplot"):
-                mkdir(monitor_dir + "/autoplot")
-            # Set the file's buffering to 10MB
-            self.fd_file = open(monitor_dir + "/autoplot/fd_usage.csv", "w", (1024 ** 2) * 10)
-            self.fd_file.write("time,pid,Number of file descriptors\n")
-            # Set the file's buffering to 10MB
-            self.threads_file = open(monitor_dir + "/autoplot/thread_count.csv", "w", (1024 ** 2) * 10)
-            self.threads_file.write("time,pid,Number of threads\n")
             # We read the jiffie -> second conversion rate from the os, by dividing the utime
             # and stime values by this conversion rate we will get the actual cpu seconds spend during this second.
             try:
@@ -252,10 +192,8 @@ class ProcessMonitor(object):
                 pagesize = 4 * 1024
 
             self.monitor_file.write(json.dumps({"sc_clk_tck": sc_clk_tck, 'pagesize': pagesize}) + "\n")
-
-            # If monitoring network, open a separate file.
-            if network:
-                self.network_monitor_file = open(monitor_dir + "/network_usage.log", "w", (1024 ** 2) * 10)  # Set the file's buffering to 10MB
+        else:
+            self.monitor_file = None
         # Capture SIGTERM to kill all the child processes before dying
         self.stopping = False
         signal(SIGTERM, self._termTrap)
@@ -264,22 +202,7 @@ class ProcessMonitor(object):
         self.stopping = True
         if self.monitor_file:
             self.monitor_file.close()
-        if self.fd_file:
-            self.fd_file.close()
-        if self.threads_file:
-            self.threads_file.close()
-
-        # Check if any process exited with an error code before killing the remaining ones
-        failed = self._rm.get_failed_commands()
         self._rm.terminate()
-        if failed:
-            print "Some processes failed:"
-            for pid, (command, exit_code) in failed.iteritems():
-                print "  %s (%d) exited value: %d" % (command, pid, exit_code)
-            print "Process guard exiting with error"
-            return COMMANDS_FAILED_EXIT_CODE
-        else:
-            return OK_EXIT_CODE
 
     def _termTrap(self, *argv):
         print "Captured TERM signal"
@@ -315,46 +238,10 @@ class ProcessMonitor(object):
                 sleep_time = next_wake - timestamp
                 if sleep_time < 0:
                     print "Can't keep up with this interval, try a higher value!", sleep_time
-                    return self.stop()
-
-            if self.network_monitor_file:
-                for line in self._rm.get_network_stats():
-                    self.network_monitor_file.write("%.1f %s\n" % (r_timestamp, line))
-
-            if hasattr(self.psutil_process, 'children'):
-                p_children = self.psutil_process.children(recursive=True)
-            else:
-                p_children = self.psutil_process.get_children(recursive=True)
-
-            if self.fd_file:
-                for child_process in p_children:
-                    try:
-                        if hasattr(self.psutil_process, 'num_fds'):
-                            self.fd_file.write("%.1f,%s,%d\n" %
-                                               (r_timestamp, child_process.pid, child_process.num_fds()))
-                        else:
-                            self.fd_file.write("%.1f,%s,%d\n" %
-                                               (r_timestamp, child_process.pid, child_process.get_num_fds()))
-                    except (AccessDenied, NoSuchProcess):
-                        pass  # Just ignore the file descriptors of this invalid process
-
-            if self.threads_file:
-                for child_process in p_children:
-                    try:
-                        # Supports: Linux, Windows, OSX, SunOS
-                        # Unsupported: BSD
-                        if hasattr(self.psutil_process, 'num_threads'):
-                            self.threads_file.write("%.1f,%s,%d\n" %
-                                                    (r_timestamp, child_process.pid, child_process.num_threads()))
-                        elif hasattr(self.psutil_process, 'get_num_threads'):
-                            self.threads_file.write("%.1f,%s,%d\n" %
-                                                    (r_timestamp, child_process.pid, child_process.get_num_threads()))
-                    except (AccessDenied, NoSuchProcess):
-                        pass  # Just ignore the number of threads of this invalid process
+                    self.stop()
 
             if self.end_time and timestamp > self.end_time:  # if self.end_time == 0 the time out is disabled.
                 print "Time out, killing monitored processes."
-                self.timed_out = True
                 return self.stop()
             sleep(sleep_time)
 
@@ -366,12 +253,6 @@ if __name__ == "__main__":
                       default=0,
                       type=int,
                       help="Hard timeout, after this amount of seconds all the child processes will be killed."
-                      )
-    parser.add_option("-T", "--fail-on-timeout",
-                      action="store_true",
-                      default=False,
-                      dest="fail_on_timeout",
-                      help="Exit with status code 3 when a timeout happens."
                       )
     parser.add_option("-m", "--monitor-dir",
                       metavar='OUTDIR',
@@ -399,11 +280,6 @@ if __name__ == "__main__":
                       action="store",
                       help="Sample monitoring stats and check processes/threads every FLOAT seconds"
                       )
-    parser.add_option("-n", "--network",
-                      action="store_true",
-                      default=False,
-                      help="Monitor network devices."
-                      )
     (options, args) = parser.parse_args()
     if not (options.commands_file or options.commands):
         parser.error("Please specify at least one of --command or --commands-file (run with -h to see command usage).")
@@ -425,13 +301,11 @@ if __name__ == "__main__":
         print "making output directory: %s" % options.output_dir
         makedirs(options.output_dir)
 
-    pm = ProcessMonitor(commands, options.timeout, options.interval, options.output_dir, options.monitor_dir, options.network)
+    pm = ProcessMonitor(commands, options.timeout, options.interval, options.output_dir, options.monitor_dir)
     try:
-        exit(pm.monitoring_loop())
+        pm.monitoring_loop()
 
     except KeyboardInterrupt as RuntimeError:
         print "Killing monitored processes..."
         pm.stop()
         print "Done."
-    if pm.timed_out and options.fail_on_timeout:
-        exit(TIMEOUT_EXIT_CODE)

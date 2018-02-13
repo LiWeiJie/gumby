@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # run.py ---
 #
 # Filename: run.py
@@ -37,7 +37,7 @@
 
 # Code:
 
-from os import path, chdir, environ, makedirs, listdir, remove
+from os import path, chdir, environ, makedirs
 from shutil import rmtree
 import logging
 import sys
@@ -326,11 +326,7 @@ class ExperimentRunner():
         # Step 2:
         # Clear output dir before starting.
         if path.exists(self._output_dir):
-            for element in listdir(self._output_dir):
-                if path.isfile(path.join(self._output_dir, element)):
-                    remove(path.join(self._output_dir, element))
-                else:
-                    rmtree(path.join(self._output_dir, element))
+            rmtree(self._output_dir)
 
         # Step 3:
         # Sync the working dir with the head nodes

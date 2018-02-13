@@ -75,6 +75,7 @@ class ColoredFileLogObserver(FileLogObserver):
         fmtDict = {
             'system': eventDict['system'],
             'text': text.replace("\n", "\n\t")}
+        systemStr = ""
         systemStr = self._colorize(
             _safeFormat("[%(system)s]", fmtDict),
             ColoredFileLogObserver.GREY_NORMAL)
@@ -156,14 +157,6 @@ class PythonLoggingObserver(object):
 
 # TODO(emilon): Document this on the user manual
 def setupLogging():
-    # Allow to override the root handler log level from an environment variable.
-    # @CONF_OPTION LOG_LEVEL: Override log level (for python that would be the root handler's log level only)
-    log_level_override = environ.get("GUMBY_LOG_LEVEL", None)
-    log_level = logging.INFO
-    if log_level_override:
-        print "Using custom logging level: %s" % log_level_override
-        log_level = getattr(logging, log_level_override)
-
     config_file = path.join(environ['EXPERIMENT_DIR'], "logger.conf")
     root = logging.getLogger()
 
@@ -180,12 +173,21 @@ def setupLogging():
         print "No logger.conf found."
         stdout.flush()
 
-        root.setLevel(log_level)
+        root.setLevel(logging.INFO)
+        stdout_handler = logging.StreamHandler(stdout)
+        stdout_handler.setLevel(logging.INFO)
+        root.addHandler(stdout_handler)
 
         stderr_handler = logging.StreamHandler(stderr)
-        stderr_handler.setLevel(log_level)
-        stderr_handler.setFormatter(logging.Formatter("%(asctime)s:%(levelname)s:%(message)s"))
+        stderr_handler.setLevel(logging.WARNING)
         root.addHandler(stderr_handler)
+
+    # Allow to override the root handler log level from an environment variable.
+    # @CONF_OPTION LOG_LEVEL: Override log level (for python that would be the root handler's log level only)
+    log_level_override = environ.get("GUMBY_LOG_LEVEL", None)
+    if log_level_override:
+        level = getattr(logging, log_level_override)
+        logging.getLogger().setLevel(level)
 
     observer = PythonLoggingObserver('root', defaultLogLevel=logging.INFO)
     observer.start()

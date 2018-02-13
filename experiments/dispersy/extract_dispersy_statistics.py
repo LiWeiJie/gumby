@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 import re
 import sys
 import os
@@ -25,7 +25,7 @@ class ExtractStatistics:
         files = sorted(self.yield_files())
         if not len(files):
             print >> sys.stderr, "No files found to parse!"
-            return
+            sys.exit(1)
 
         print >> sys.stderr, "Starting to parse", len(files), "files"
 
@@ -150,8 +150,6 @@ class ExtractStatistics:
 
     def yield_files(self, file_to_check='statistics.log'):
         pattern = re.compile('[0-9]+')
-
-        # DAS structure
         for headnode in os.listdir(self.node_directory):
             headdir = os.path.join(self.node_directory, headnode)
             if os.path.isdir(headdir):
@@ -164,18 +162,8 @@ class ExtractStatistics:
                                 peer_nr = int(peer)
 
                                 filename = os.path.join(self.node_directory, headnode, node, peer, file_to_check)
-                                if os.path.exists(filename) and os.stat(filename).st_size > 0:
+                                if os.path.exists(filename):
                                     yield peer_nr, filename, peerdir
-
-        # localhost structure
-        for peer in os.listdir(self.node_directory):
-            peerdir = os.path.join(self.node_directory, peer)
-            if os.path.isdir(peerdir) and pattern.match(peer):
-                peer_nr = int(peer)
-
-                filename = os.path.join(self.node_directory, peer, file_to_check)
-                if os.path.exists(filename) and os.stat(filename).st_size > 0:
-                    yield peer_nr, filename, peerdir
 
     def merge_records(self, inputfilename, outputfilename, columnindex, diffoutputfilename=None):
         all_nodes = []
@@ -720,7 +708,7 @@ class AnnotateMessages(AbstractHandler):
 def get_parser(argv):
     e = ExtractStatistics(argv[1])
     e.add_handler(BasicExtractor())
-    e.add_handler(SuccMessages(argv[2] if len(argv) > 2 else ""))
+    e.add_handler(SuccMessages(argv[2]))
     e.add_handler(StatisticMessages())
     e.add_handler(DropMessages())
     e.add_handler(BootstrapMessages())
@@ -729,8 +717,8 @@ def get_parser(argv):
     return e
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2 and len(sys.argv) != 3:
-        print "Usage: %s <node-directory> [messagestoplot]" % (sys.argv[0])
+    if len(sys.argv) != 3:
+        print "Usage: %s <node-directory> <messagestoplot>" % (sys.argv[0])
         print >> sys.stderr, sys.argv
 
         sys.exit(1)

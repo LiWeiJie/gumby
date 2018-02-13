@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 #
 # Generate a list of peers to use with clusten run
 # The list is in the following format:

@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # scenario.py ---
 #
 # Filename: scenario.py
@@ -47,7 +47,9 @@
 
 import logging
 import shlex
-from os import environ, path
+import sys
+from itertools import ifilter
+from os import environ
 from re import compile as re_compile
 from threading import RLock
 from time import time
@@ -55,7 +57,7 @@ from time import time
 from twisted.internet import reactor
 
 
-class ScenarioParser(object):
+class ScenarioParser():
     """
     Scenario line format:
         TIMESPEC CALLABLE [ARGS] [PEERSPEC]
@@ -85,77 +87,59 @@ class ScenarioParser(object):
                time stamp, they will be executed in order.
     """
     _re_substitution = re_compile("(\$\w+)")
-    _re_preprocessor_dir = re_compile("^&(\w+)\s+")
-    _re_named_arg = re_compile("^\s*(\w+)\s*=\s*(.*)$")
 
     def __init__(self):
-        super(ScenarioParser, self).__init__()
         self._logger = logging.getLogger(self.__class__.__name__)
         self.file_lock = RLock()
-        self.line_buffer = []
-        self.preprocessor_callbacks = {
-            "include": self._preproc_include_file
-        }
+        self.file_buffer = None
 
-    def add_scenario(self, filename):
+    def _read_scenario(self, filename):
         """
-        Read the scenario into this scenario parser.
+        Read the scenario into memory return a list containing the lines.
         """
         with self.file_lock:
-            with open(filename, "r") as scenario_file:
-                lines = scenario_file.readlines()
+            if not self.file_buffer or self.file_buffer[0] != filename:
+                f = open(filename, "r")
+                lines = f.readlines()
+                f.close()
 
-            line_number = 1
-            for line in lines:
-                if line.startswith("&"):
-                    preproc_match = self._re_preprocessor_dir.match(line)
-                    if preproc_match and preproc_match.group(1) in self.preprocessor_callbacks:
-                        self.preprocessor_callbacks[preproc_match.group(1)](filename, line_number,
-                                                                            line[preproc_match.end():].strip())
-                    else:
-                        self._logger.error("Error reading scenario %s:%d, preprocessor callback %s is unknown.",
-                                           filename, line_number, line)
-                elif not line.startswith('#'):
-                    line = line.strip()
-                    self.line_buffer.append((filename, line_number, line))
-                line_number += 1
+                line_buffer = []
 
-    def _preproc_include_file(self, filename, line_number, line):
-        exline = self._expand_line(line)
-        if not path.isabs(line):
-            include_name = path.join(path.dirname(filename), exline)
-        else:
-            include_name = exline
-        if not path.exists(include_name):
-            include_name = path.join(environ["PROJECT_DIR"], exline)
-        if not path.exists(include_name):
-            include_name = path.join(environ["EXPERIMENT_DIR"], exline)
-        if path.exists(include_name):
-            self.add_scenario(include_name)
-        else:
-            self._logger.error("Error reading scenario %s:%d, include %s does not exist.", filename, line_number, line)
+                linenr = 1
+                for line in lines:
+                    if not line.startswith('#'):
+                        line = line.strip()
+                        line_buffer.append((linenr, line))
+                    linenr += 1
 
-    def _parse_scenario(self):
+                self.file_buffer = (filename, line_buffer)
+        return self.file_buffer[1]
+
+    def _parse_scenario(self, filename):
         """
         Returns a list of commands that will be executed.
 
-        A command is a (TIMESTAMP, FILENAME, LINENO, CALLABLE, ARGS, KWARGS) tuple. CALLABLE is
+        A command is a (TIMESTAMP, LINENO, CALLABLE, ARGS, PEERSPEC) tuple. CALLABLE is
         the name of a function, method, etc. registered with this scenario using
         the register() method.
         """
-        for filename, line_number, line in self.line_buffer:
-            if line.endswith('}'):
-                start = line.rfind('{') + 1
-                peerspec = line[start:-1]
-                line = line[:start - 1]
-            else:
-                peerspec = ''
+        try:
+            for lineno, line in self._read_scenario(filename):
+                if line.endswith('}'):
+                    start = line.rfind('{') + 1
+                    peerspec = line[start:-1]
+                    line = line[:start - 1]
+                else:
+                    peerspec = ''
 
-            cmd = self._parse_scenario_line(filename, line_number, line, peerspec)
-            if cmd is not None:
-                yield cmd
+                cmd = self._parse_scenario_line(lineno, line, peerspec)
+                if cmd is not None:
+                    yield cmd
 
-    def _parse_scenario_line(self, filename, line_number, line, peerspec):
+        except EnvironmentError:
+            print >> sys.stderr, "Scenario file open/read error", filename
+
+    def _parse_scenario_line(self, lineno, line, peerspec):
         """
         Parses one scenario line, and returns a command tuple. If a parsing
         error is encountered or the line should not be executed by this peer,
@@ -164,13 +148,11 @@ class ScenarioParser(object):
         The command tuple is described in _parse_scenario().
         """
         if self._parse_for_this_peer(peerspec):
-            line = self._expand_line(line)
+            line = self._preprocess_line(line)
             try:
                 parts = line.split(' ', 2)
                 if len(parts) == 3:
                     timespec, callable, args = parts
-                elif len(parts) == 1 and line.strip() == "":
-                    return None
                 else:
                     timespec, callable = parts
                     args = ''
@@ -178,27 +160,16 @@ class ScenarioParser(object):
                 if timespec[0] == '@':
                     timespec = timespec[1:]
                 timespec = timespec.split(':')
-                begin = float(timespec[-1])
+                begin = int(timespec[-1])
                 if len(timespec) > 1:
                     begin += int(timespec[-2]) * 60
                 if len(timespec) > 2:
                     begin += int(timespec[-3]) * 3600
 
-                unnamed_args = []
-                named_args = {}
+                return (begin, lineno, callable, shlex.split(args))
 
-                for arg in shlex.split(args):
-                    argname = self._re_named_arg.match(arg)
-                    if argname:
-                        named_args[argname.group(1)] = arg[argname.start(2):]
-                    else:
-                        unnamed_args.append(arg)
-
-                return begin, filename, line_number, callable, unnamed_args, named_args
-
-            except Exception:
-                self._logger.error("Error reading scenario %s:%d, invalid line %s.", filename, line_number, line,
-                                   exc_info=True)
+            except Exception, e:
+                print >> sys.stderr, "Ignoring invalid scenario line", lineno, line, str(e)
 
         # line not for this peer or a parse error occurred
         return None
@@ -235,10 +206,10 @@ class ScenarioParser(object):
 
         return yes_peers, no_peers
 
-    def _parse_for_this_peer(self, peerspec):
+    def _parse_for_this_peer(self):
         raise NotImplementedError('override this method please')
 
-    def _expand_line(self, line):
+    def _preprocess_line(self, line):
         # Look for $VARIABLES to replace with config options from the env.
         for substitution in self._re_substitution.findall(line):
             if substitution[1:] in environ:
@@ -246,10 +217,10 @@ class ScenarioParser(object):
 
         return line
 
-
 class ScenarioRunner(ScenarioParser):
+
     """
-    Reads, parses and schedules events from scenario files.
+    Reads, parses and schedules events from scenario file.
 
     Use expstartstamp to synchronize all peers (usually you can get this from
     the gumby config server before starting the experiment). Each peer should
@@ -260,10 +231,16 @@ class ScenarioRunner(ScenarioParser):
     ignored. The callables will be executed on the main Twisted thread.
     """
 
-    def __init__(self, expstartstamp=None):
-        super(ScenarioRunner, self).__init__()
+    def __init__(self, filename, expstartstamp=None):
+        ScenarioParser.__init__(self)
+        self.filename = filename
+
         self._callables = {}
         self._expstartstamp = expstartstamp
+        self._origin = None  # will be set just before run()-ing
+        self._my_actions = []
+
+        self._is_parsed = False
 
     def set_peernumber(self, peernumber):
         self._peernumber = peernumber
@@ -275,33 +252,37 @@ class ScenarioRunner(ScenarioParser):
         """
         if name is None:
             name = clb.__name__
-        if name in self._callables:
-            self._logger.warning("Callback method override! Collision for %s from %s and %s",
-                                 name, clb, self._callables[name])
-        self._logger.debug("Registered callback %s target %s", name, clb)
         self._callables[name] = clb
+
+    def parse_file(self):
+        for (tstmp, _, clb, args) in self._parse_scenario(self.filename):
+            if clb not in self._callables:
+                self._logger.error("'%s' is not registered as an action!", clb)
+                continue
+
+            self._my_actions.append((tstmp, clb, args))
+
+        self._is_parsed = True
 
     def run(self):
         """
         Schedules calls for each scenario line.
         """
-        self._logger.info("Running scenario")
+        self._logger.info("Running scenario from file: %s", self.filename)
 
-        if self._expstartstamp is None:
+        if not self._is_parsed:
+            self.parse_file()
+
+        if self._expstartstamp == None:
             self._expstartstamp = time()
 
-        for tstmp, filename, line_number, clb, args, kwargs in self._parse_scenario():
-            if clb not in self._callables:
-                self._logger.error("Error running scenario %s:%d, undefined callback %s.", filename, line_number, clb)
-                continue
+        for tstmp, clb, args in self._my_actions:
             tstmp = tstmp + self._expstartstamp
             delay = tstmp - time()
-            self._logger.info("Register call %s %s:%d %s %s %s", tstmp, filename, line_number, clb, repr(args), repr(kwargs))
             reactor.callLater(
                 delay if delay > 0.0 else 0,
                 self._callables[clb],
-                *args,
-                **kwargs
+                *args
             )
 
     def _parse_for_this_peer(self, peerspec):
@@ -313,3 +294,27 @@ class ScenarioRunner(ScenarioParser):
                 (no_peers and not self._peernumber in no_peers)
             )
         return True
+
+#
+# scenario.py ends here
+
+if __name__ == '__main__':
+    if len(sys.argv) < 2:
+        print >> sys.stderr, "Usage: %s <inputfile> [<peer-id>]" % (sys.argv[0])
+        print >> sys.stderr, "Got:", sys.argv
+
+        exit(1)
+
+    if len(sys.argv) == 3:
+        peer_id = int(sys.argv[2])
+    else:
+        peer_id = 1
+
+    t1 = time()
+    sr = ScenarioRunner(sys.argv[1])
+    sr.set_peernumber(peer_id)
+    sr.parse_file()
+
+    print >> sys.stderr, "Took %.2f to parse %s" % (time() - t1, sys.argv[1])
+    for tstmp, clb, args in sr._my_actions:
+        print >> sys.stderr, tstmp, clb, args

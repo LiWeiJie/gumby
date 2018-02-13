@@ -1,0 +1,11 @@
+# This experiment runs a 1 hop seeder seeding a 100mb file. Other processes will
+# download from this seeder using respectively 1, 2 and 3 hops. 
+#
+
+&include hidden_services_common.scenario
+
+@0:20 transfer action=seed hops=1 {4}
+@0:100 transfer {5}
+@0:250 transfer hops=1 {6}
+@0:400 transfer hops=2 {7}
+@0:600 stop

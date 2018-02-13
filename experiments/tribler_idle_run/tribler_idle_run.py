@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 # tribler_idle_run.py ---
 #
-# Filename: test_30m_run.py
+# Filename: tribler_idle_run.py
 # Description:
 # Author: Elric Milon
 # Maintainer:
@@ -14,7 +14,7 @@
 #
 
 # Change Log:
-#
+# 19th of May 2016: Now uses the Twistd tribler plugin to start Tribler.
 #
 #
 #
@@ -37,36 +37,51 @@
 
 # Code:
 
-import unittest
-
 import sys
 import os
+from twisted.internet import reactor
 
 from gumby.instrumentation import init_instrumentation
 
-os.chdir(os.path.abspath('./tribler'))
-sys.path.append('.')
 
-from Tribler.Test.test_as_server import TestGuiAsServer
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
-class TestGuiGeneral(TestGuiAsServer):
+sys.path.append(os.path.abspath('./tribler'))
+sys.path.append(os.path.abspath('./tribler/twisted/plugins'))
 
-    def test_debugpanel(self):
-        def end():
-            self.quit()
+from tribler_plugin import TriblerServiceMaker
 
-        def do_page():
-            init_instrumentation()
-            if "TRIBLER_EXECUTION_TIME" in os.environ:
-                run_time = int(os.environ["TRIBLER_EXECUTION_TIME"])
-            else:
-                run_time = 60*10 # Run for 10 minutes by default
-            self.Call(run_time, end)
 
-        self.startTest(do_page)
+class IdleTribleRunner():
+
+    def __init__(self):
+        init_instrumentation()
+        self.service = None
+
+    def start(self):
+        self.service = TriblerServiceMaker()
+
+        if "TRIBLER_EXECUTION_TIME" in os.environ:
+            run_time = int(os.environ["TRIBLER_EXECUTION_TIME"])
+        else:
+            run_time = 60*10  # Run for 10 minutes by default
+
+        auto_join_channels = os.environ.get("AUTO_JOIN_CHANNELS", "FALSE").upper() == "TRUE"
+
+        reactor.callLater(run_time, self.stop)
+        self.service.start_tribler({'restapi': 0, 'dispersy': 21000,
+                                    'statedir': os.path.abspath(os.path.join(BASE_DIR, "output", "tribler-state")),
+                                    'libtorrent': 21005, 'auto-join-channel': True if auto_join_channels else None})
+
+    def stop(self):
+        # TODO(Laurens): Current the plugin does not offer a function to shutdown it nicely
+        # so once this is added, make sure it is not violently killed.
+        self.service.shutdown_process("Stopping Tribler idle run", code=0)
 
 if __name__ == "__main__":
-    unittest.main()
+    runner = IdleTribleRunner()
+    reactor.callWhenRunning(runner.start)
+    reactor.run()
 
 #
 # tribler_idle_run.py ends here

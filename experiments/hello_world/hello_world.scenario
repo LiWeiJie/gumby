@@ -1,0 +1,31 @@
+## hello_world.scenario ##
+# With this we tell Gumby to load the DispersyModule, which takes care of providing a Dispersy instance for us
+# If you want extended Tribler functionality, you should use gumby.modules.tribler_module.TriblerModule instead
+&module gumby.modules.dispersy_module.DispersyModule
+
+# This tells Gumby to load our hello_world_module.py file's HelloWorldModule class
+&module experiments.hello_world.hello_world_module.HelloWorldModule
+
+# At 0 seconds into the experiment, make sure our HelloWorldCommunity does not communicate with the outside world
+@0 isolate_community HelloWorldCommunity
+
+# At 1 second into the experiment, start running Dispersy
+@1 start_session
+
+# At 2 seconds into the experiment, introduce all of the peers to each other
+@2 introduce_peers
+
+# At 15 seconds into the experiment, reset our Dispersy statistics
+# And draw a line in our output graphs called `start-experiment`
+@15 reset_dispersy_statistics
+@15 annotate start-experiment
+
+# At 30 seconds into the experiment, call a HelloWorldModule function
+@30 hello
+
+# At 1 minute into the experiment, call a HelloWorldModule function for one process (node 3)
+@1:0 extended_hello 2 {3}
+
+# Once we've had our fun, stop cleanly
+@1:10 stop_session
+@1:15 stop

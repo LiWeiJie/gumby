@@ -46,7 +46,7 @@ if [ "${DISPERSY_LOOK_FOR_ERRORS,,}" != "false" ]; then
     echo "Looking for execution errors..."
     for FILE in $(find -type f ! -empty -name "*.err"); do
         echo "Found in: $FILE"
-        cat "$FILE"
+        # cat "$FILE"
     done
     echo "Done"
 else

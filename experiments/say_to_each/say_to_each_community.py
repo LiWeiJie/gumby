@@ -10,6 +10,8 @@ from Tribler.dispersy.message import BatchConfiguration, Message
 from Tribler.dispersy.payload import Payload
 from Tribler.dispersy.resolution import PublicResolution
 
+from Tribler.Core.Utilities.encoding import encode, decode
+
 
 class SayToEachCommunity(Community):
 

@@ -12,7 +12,7 @@
 @75 print_guestbook
 @76 clean_guestbook
 
-@75 say_to_locals
+@77 say_to_locals
 @120 print_guestbook
 
 

@@ -113,7 +113,7 @@ class SayToEachCommunityConversion(BinaryConversion):
     def _encode_say(self, message):
         return encode((message.payload.who, message.payload.text)),
 
-    def _decode_share(self, placeholder, offset, data):
+    def _decode_say(self, placeholder, offset, data):
         try:
             offset, payload = decode(data, offset)
         except ValueError:

@@ -31,8 +31,8 @@ class SayToEachCommunityLauncher(CommunityLauncher):
     def get_kwargs(self, session):
         return {}
 
-    def get_name(self):
-        return "SayToEachCommunity2Weijie"
+    # def get_name(self):
+    #     return "SayToEachCommunity2Weijie"
 
 
 

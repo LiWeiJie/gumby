@@ -8,11 +8,11 @@
 @15 annotate start-experiment
 
 @25 print_myself
-@30 say_to_locals
+@30 say_to_others
 @75 print_guestbook
 @76 clean_guestbook
 
-@75 say_to_others
+@75 say_to_locals
 @120 print_guestbook
 
 

@@ -64,7 +64,7 @@ class SayToEachCommunity(Community):
         meta = self.get_meta_message(u"say-to-others")
         message = meta.impl(authentication=(self._my_member,),
                             distribution=(self.claim_global_time(),),
-                            payload=(self.get_master_members().__str__(), "hello"))
+                            payload=(self.my_member.__str__(), "hello"))
         self.dispersy.store_update_forward([message], False, False, True)
 
     def say_to_locals(self):
@@ -74,7 +74,7 @@ class SayToEachCommunity(Community):
             messages.append(meta.impl(authentication=(self._my_member,),
                                       distribution=(self.claim_global_time(),),
                                       destination=(candidate,),
-                                      payload=(self.get_master_members().__str__(), "hello")))
+                                      payload=(self.my_member.__str__(), "hello")))
         self.dispersy.store_update_forward(messages, False, False, True)
 
 class SayToOthersPayload(Payload):

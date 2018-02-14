@@ -59,18 +59,6 @@ class SayToEachModule(CommunityExperimentModule):
         print "guest book size: %d\n"%self.community.guestbook.__len__()
         print self.community.guestbook
 
-    # @experiment_callback
-    # def share_local(self):
-    #     self.community.share_local()
-
-    # @experiment_callback
-    # def share_subset_sum(self):
-    #     self.community.share_subset_sum()
-
-    # @experiment_callback
-    # def print_local_value(self):
-    #     print "My secret value is", self.community.my_secret_share
-
-    # @experiment_callback
-    # def print_total_sum(self):
-    #     print "My computed sum is", self.community.total_sum
+    @experiment_callback
+    def print_myself(self):
+        print "I am ", self.community.my_member

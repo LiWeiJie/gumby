@@ -7,6 +7,7 @@
 @15 reset_dispersy_statistics
 @15 annotate start-experiment
 
+@25 print_myself
 @30 say_to_locals
 @45 print_guestbook
 

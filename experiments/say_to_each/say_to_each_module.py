@@ -60,5 +60,10 @@ class SayToEachModule(CommunityExperimentModule):
         print self.community.guestbook
 
     @experiment_callback
+    def clean_guestbook(self):
+        self.community.guestbook = []
+
+
+    @experiment_callback
     def print_myself(self):
         print "I am ", self.community.my_member

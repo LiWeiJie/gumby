@@ -1,0 +1,18 @@
+&module gumby.modules.dispersy_module.DispersyModule
+&module experiments.say_to_each.say_to_each_module.SayToEachModule
+
+@0 isolate_community SayToEachCommunity
+@1 start_session
+@2 introduce_peers
+@15 reset_dispersy_statistics
+@15 annotate start-experiment
+
+@30 say_to_locals
+@45 print_guestbook
+
+@60 say_to_others
+@75 print_guestbook
+
+
+@90 stop_session
+@100 stop

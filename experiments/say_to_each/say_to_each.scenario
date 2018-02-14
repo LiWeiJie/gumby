@@ -9,11 +9,11 @@
 
 @25 print_myself
 @30 say_to_locals
-@45 print_guestbook
-
-@60 say_to_others
 @75 print_guestbook
 
+@75 say_to_others
+@120 print_guestbook
 
-@90 stop_session
-@100 stop
+
+@130 stop_session
+@135 stop

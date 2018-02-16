@@ -69,6 +69,12 @@ class SayToEachCommunity(Community):
                             payload=(self.my_member.__str__(), "hello"))
         self.dispersy.store_update_forward([message], False, False, True)
 
+    def write_down_neighbors(self):
+        # veris = self.dispersy_yield_verified_candidates()
+        print "candidates : %d"%self._candidates.__len__()
+        for candidate in self.dispersy_yield_candidates():
+            print candidate
+
     def say_to_locals(self):
         meta = self.get_meta_message(u"say-to-locals")
         messages = []

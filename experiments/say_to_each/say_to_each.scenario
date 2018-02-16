@@ -3,18 +3,16 @@
 
 @0 isolate_community SayToEachCommunity
 @1 start_session
-@2 introduce_peers
 @15 reset_dispersy_statistics
 @15 annotate start-experiment
 
 @25 print_myself
-@30 say_to_others
-@75 print_guestbook
-@76 clean_guestbook
+@30 write_down_neighbors
 
-@77 say_to_locals
-@120 print_guestbook
+@35 introduce_peers
+@45 write_down_neighbors
+@60 write_down_neighbors
+@75 write_down_neighbors
 
-
-@130 stop_session
-@135 stop
+@90 stop_session
+@100 stop

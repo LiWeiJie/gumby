@@ -63,6 +63,9 @@ class SayToEachModule(CommunityExperimentModule):
     def clean_guestbook(self):
         self.community.guestbook = []
 
+    @experiment_callback
+    def write_down_neighbors(self):
+        self.community.write_down_neighbors()
 
     @experiment_callback
     def print_myself(self):

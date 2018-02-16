@@ -81,7 +81,7 @@ class SayToEachCommunity(Community):
                 walk_ct += 1
             elif cate in (u"stumble"):
                 stumble_ct += 1
-            elif cate in in (u"intro"):
+            elif cate in (u"intro"):
                 intro_ct += 1
 
         print "<Total candidates : %d, walk node: %d, stumble node: %d, intro node: %d>"%(self._candidates.__len__(), walk_ct, stumble_ct, intro_ct)

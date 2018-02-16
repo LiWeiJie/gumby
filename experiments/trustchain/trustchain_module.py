@@ -11,6 +11,7 @@ from twisted.internet.task import LoopingCall
 
 from Tribler.community.trustchain.community import TrustChainCommunity
 
+from time import time
 
 @static_module
 class TrustchainModule(CommunityExperimentModule):
@@ -55,6 +56,22 @@ class TrustchainModule(CommunityExperimentModule):
         self.community.send_crawl_request(self.get_candidate(candidate_id),
                                           self.get_candidate(candidate_id).get_member().public_key,
                                           int(sequence_number))
+
+    @experiment_callback
+    def write_down_cadidates(self):
+        walk_ct = stumble_ct = intro_ct = 0
+        now = time()
+        for candidate in self._candidates.itervalues():
+            cate = candidate.get_category(now)
+            if cate in (u"walk"):
+                walk_ct += 1
+            elif cate in (u"stumble"):
+                stumble_ct += 1
+            elif cate in (u"intro"):
+                intro_ct += 1
+
+        print "<Total candidates : %d, walk node: %d, stumble node: %d, intro node: %d>" % (
+        self._candidates.__len__(), walk_ct, stumble_ct, intro_ct)
 
     @experiment_callback
     def request_random_signature(self):

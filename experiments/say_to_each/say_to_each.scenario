@@ -11,7 +11,7 @@
 
 @35 introduce_peers
 @45 write_down_neighbors
-@60 write_down_neighbors
+@70 write_down_neighbors
 @130 write_down_neighbors
 
 @140 stop_session

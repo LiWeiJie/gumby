@@ -12,6 +12,8 @@ from Tribler.dispersy.resolution import PublicResolution
 
 from Tribler.Core.Utilities.encoding import encode, decode
 
+from time import time
+
 
 class SayToEachCommunity(Community):
 
@@ -71,9 +73,19 @@ class SayToEachCommunity(Community):
 
     def write_down_neighbors(self):
         # veris = self.dispersy_yield_verified_candidates()
-        print "candidates : %d"%self._candidates.__len__()
-        for candidate in self.dispersy_yield_candidates():
-            print candidate
+        walk_ct = stumble_ct = intro_ct = 0
+        now = time()
+        for candidate in self._candidates.itervalues():
+            cate = candidate.get_category(now)
+            if cate in (u"walk"):
+                walk_ct += 1
+            elif cate in (u"stumble"):
+                stumble_ct += 1
+            elif cate in in (u"intro"):
+                intro_ct += 1
+
+        print "<Total candidates : %d, walk node: %d, stumble node: %d, intro node: %d>"%(self._candidates.__len__(), walk_ct, stumble_ct, intro_ct)
+        
 
     def say_to_locals(self):
         meta = self.get_meta_message(u"say-to-locals")

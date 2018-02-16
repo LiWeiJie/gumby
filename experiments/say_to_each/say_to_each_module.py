@@ -35,7 +35,6 @@ class SayToEachCommunityLauncher(CommunityLauncher):
     #     return "SayToEachCommunity2Weijie"
 
 
-
 @static_module
 class SayToEachModule(CommunityExperimentModule):
     """

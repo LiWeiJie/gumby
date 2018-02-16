@@ -6,13 +6,14 @@
 @15 reset_dispersy_statistics
 @15 annotate start-experiment
 
-@25 print_myself
-@30 write_down_neighbors
+@20 print_myself
+@20 write_down_neighbors
 
-@35 introduce_peers
-@45 write_down_neighbors
-@70 write_down_neighbors
-@130 write_down_neighbors
+@21 introduce_peers
+@25 write_down_neighbors
+@81 write_down_neighbors
+@142 write_down_neighbors
+@202 write_down_neighbors
 
-@140 stop_session
-@150 stop
+@210 stop_session
+@215 stop

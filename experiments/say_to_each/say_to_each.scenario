@@ -1,7 +1,7 @@
 &module gumby.modules.dispersy_module.DispersyModule
 &module experiments.say_to_each.say_to_each_module.SayToEachModule
 
-@0 isolate_community SayToEachCommunity
+@0 isolate_community SayToEachCommunity2
 @1 start_session
 @15 reset_dispersy_statistics
 @15 annotate start-experiment

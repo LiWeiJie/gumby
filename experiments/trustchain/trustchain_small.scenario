@@ -3,11 +3,7 @@
 
 @0:1 isolate_community TrustChainCommunity
 @0:2 start_session
-@14 write_down_cadidates
 @0:15 start_requesting_signatures
-@17 write_down_cadidates
-@30 write_down_cadidates
-@90 write_down_cadidates
 @0:130 stop_requesting_signatures
 @0:140 stop_session
 @0:150 stop

@@ -121,6 +121,8 @@ class IsolatedCommunityLoader(DefaultCommunityLoader):
         See CommunityLauncher.get_name()
         :type name: str
         """
+        logging.error(name)
+        logging.error(self.community_launchers.keys())
         assert name in self.community_launchers.keys()
 
         if name in self.isolated:

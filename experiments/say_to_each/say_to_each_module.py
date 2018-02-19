@@ -78,5 +78,9 @@ class SayToEachModule(CommunityExperimentModule):
             self.community.say_response_to_broadcast(candidate, "")
 
     @experiment_callback
+    def test(self):
+        pass
+
+    @experiment_callback
     def print_myself(self):
         print "I am ", self.community.my_member, " " + str(self.my_id)

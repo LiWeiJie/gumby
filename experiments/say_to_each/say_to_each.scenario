@@ -14,10 +14,9 @@
 @2:21 write_down_neighbors
 @3:21 write_down_neighbors
 
+@3:22 introduce_peers {20}
 
 @3:32 write_down_neighbors
-
-@4:22 introduce_peers {20}
 @4:32 write_down_neighbors
 @5:32 write_down_neighbors
 

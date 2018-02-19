@@ -10,6 +10,9 @@ from gumby.modules.community_experiment_module import CommunityExperimentModule
 from twisted.internet.task import LoopingCall
 
 from Tribler.community.trustchain.community import TrustChainCommunity
+# from Tribler.community.multichain.community import MultiChainCommunity
+
+
 
 from time import time
 
@@ -61,7 +64,7 @@ class TrustchainModule(CommunityExperimentModule):
     def write_down_cadidates(self):
         walk_ct = stumble_ct = intro_ct = 0
         now = time()
-        for candidate in self._candidates.itervalues():
+        for candidate in self.community._candidates.itervalues():
             cate = candidate.get_category(now)
             if cate in (u"walk"):
                 walk_ct += 1
@@ -71,7 +74,10 @@ class TrustchainModule(CommunityExperimentModule):
                 intro_ct += 1
 
         print "<Total candidates : %d, walk node: %d, stumble node: %d, intro node: %d>" % (
-        self._candidates.__len__(), walk_ct, stumble_ct, intro_ct)
+        self.community._candidates.__len__(), walk_ct, stumble_ct, intro_ct)
+
+    def get_name(self):
+        return "SayToEachCommunity"
 
     @experiment_callback
     def request_random_signature(self):

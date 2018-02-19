@@ -10,32 +10,28 @@
 @20 write_down_neighbors {1-20, 31-1000}
 
 @21 introduce_peers {1-20, 31-1000}
-@1:21 write_down_neighbors {1-20, 31-1000}
-@2:21 write_down_neighbors {1-20, 31-1000}
-@3:21 write_down_neighbors {1-20, 31-1000}
+@40 write_down_neighbors {1-20, 31-1000}
 
-@3:25 isolate_community SayToEachCommunity {21-30}
-@3:26 start_session {21-30}
-@3:40 reset_dispersy_statistics {21-30}
-@3:40 annotate start-experiment {21-30}
+@1:25 isolate_community SayToEachCommunity {21-30}
+@1:26 start_session {21-30}
+@1:40 reset_dispersy_statistics {21-30}
+@1:40 annotate start-experiment {21-30}
 
-@4:00 print_myself
-@4:00 write_down_neighbors
+@2:00 print_myself
+@2:00 write_down_neighbors
 
-@4:21 introduce_peers {21-30}
+@2:21 introduce_peers {21-30}
 
-@4:10 write_down_neighbors
-@4:20 write_down_neighbors
-@4:30 write_down_neighbors
-@4:40 write_down_neighbors
+@3:10 write_down_neighbors
+@3:20 write_down_neighbors
+@3:30 write_down_neighbors
+@3:40 write_down_neighbors
 
+@3:50 say_broadcast {16-25}
+
+@4:21 write_down_neighbors
 @5:21 write_down_neighbors
+@6:22 write_down_response_to_broadcast
 
-@5:30 say_broadcast {21-25}
-
-@6:21 write_down_neighbors
-@7:21 write_down_neighbors
-@7:22 write_down_response_to_broadcast
-
-@8:00 stop_session
-@8:05 stop
+@7:00 stop_session
+@7:05 stop

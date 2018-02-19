@@ -31,6 +31,8 @@ class SayToEachCommunity(Community):
         self.start_time = time()
         self._response_to_broadcast_ct = 0
         self._response_dict = {}
+        self._broadcaster = []
+
 
     def initiate_conversions(self):
         return [DefaultConversion(self), SayToEachCommunityConversion(self)]
@@ -79,20 +81,16 @@ class SayToEachCommunity(Community):
 
     def on_say_broadcast(self, messages):
         for message in messages:
-            print("%s say to me at %d: %s"%(message.payload.who, time()-self.start_time, message.payload.text))
+            print("%s say to me at %d: %s" % (message.payload.who, time()-self.start_time, message.payload.text))
             print("Received broadcast from node %s for sequence number %d"%(
                              message.candidate.get_member().public_key.encode("hex")[-8:],
                              message.payload.requested_sequence_number))
+            # response to broadcast
+            self._broadcaster.append(message.candidate)
+            self.say_response_to_broadcast(message.candidate, "")
 
             # self.guestbook.append( message.payload.who + " say : " + message.payload.text )
 
-        # response to broadcast
-        meta = self.get_meta_message(u"response-to-broadcast")
-        message = meta.impl(authentication=(self._my_member,),
-                            distribution=(self.claim_global_time(),),
-                            destination=(message.candidate,),
-                            payload=(self.my_member.__str__(), ""))
-        self.dispersy.store_update_forward([message], False, False, True)
 
     def on_response_to_broadcast(self, messages):
         for message in messages:
@@ -109,6 +107,14 @@ class SayToEachCommunity(Community):
     @property
     def response_to_broadcast_ct(self):
         return self._response_to_broadcast_ct
+
+    def say_response_to_broadcast(self, candidate, msg):
+        meta = self.get_meta_message(u"response-to-broadcast")
+        message = meta.impl(authentication=(self._my_member,),
+                            distribution=(self.claim_global_time(),),
+                            destination=(candidate,),
+                            payload=(self.my_member.__str__(), msg))
+        self.dispersy.store_update_forward([message], False, False, True)
 
     def say_broadcast(self, msg):
         self._response_to_broadcast_ct = 0

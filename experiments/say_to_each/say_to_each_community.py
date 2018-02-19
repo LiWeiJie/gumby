@@ -85,7 +85,7 @@ class SayToEachCommunity(Community):
             print("Received broadcast from node %s" % (
                              message.candidate.get_member().public_key.encode("hex")[-8:],
                              ))
-            print(message.authentication)
+            print(message.authentication.member)
             # response to broadcast
             self._broadcaster.append(message.candidate)
             # self.say_response_to_broadcast(message.candidate, "")

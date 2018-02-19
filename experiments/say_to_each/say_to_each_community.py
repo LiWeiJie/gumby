@@ -63,13 +63,14 @@ class SayToEachCommunity(Community):
 
     def on_say(self, messages):
         for message in messages:
-            self.guestbook.append( message.payload.who + " say : " + message.payload.text )
+            # self.guestbook.append( message.payload.who + " say : " + message.payload.text )
+            print("%s say to me at %d: %s"%(message.payload.who, self.start_time, message.payload.text))
 
-    def say_to_others(self):
+    def say_to_others(self, msg):
         meta = self.get_meta_message(u"say-to-others")
         message = meta.impl(authentication=(self._my_member,),
                             distribution=(self.claim_global_time(),),
-                            payload=(self.my_member.__str__(), "hello"))
+                            payload=(self.my_member.__str__(), msg))
         self.dispersy.store_update_forward([message], False, False, True)
 
     def write_down_neighbors(self):

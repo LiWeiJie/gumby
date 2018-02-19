@@ -47,7 +47,7 @@ class SayToEachModule(CommunityExperimentModule):
 
     @experiment_callback
     def say_to_others(self):
-        self.community.say_to_others()
+        self.community.say_to_others("I am "+str(self.my_id))
 
     @experiment_callback
     def say_to_locals(self):
@@ -68,4 +68,4 @@ class SayToEachModule(CommunityExperimentModule):
 
     @experiment_callback
     def print_myself(self):
-        print "I am ", self.community.my_member
+        print "I am ", self.community.my_member, " " + str(self.my_id)

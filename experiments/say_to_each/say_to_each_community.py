@@ -29,6 +29,8 @@ class SayToEachCommunity(Community):
         self.n = 5
         self.guestbook = []
         self.start_time = time()
+        self._response_to_broadcast_ct = 0
+        self._response_dict = {}
 
     def initiate_conversions(self):
         return [DefaultConversion(self), SayToEachCommunityConversion(self)]
@@ -37,14 +39,14 @@ class SayToEachCommunity(Community):
         messages = super(SayToEachCommunity, self).initiate_meta_messages()
 
         ourmessages = [Message(self,
-                               u"say-to-others",
+                               u"say-broadcast",
                                MemberAuthentication(),
                                PublicResolution(),
                                FullSyncDistribution(u"ASC", 128, False),
                                CommunityDestination(10),
                                SayToOthersPayload(),
                                self._generic_timeline_check,
-                               self.on_say,
+                               self.on_say_broadcast,
                                batch=BatchConfiguration(0.0)),
                        Message(self,
                                u"say-to-locals",
@@ -55,6 +57,16 @@ class SayToEachCommunity(Community):
                                SayToOthersPayload(),
                                self._generic_timeline_check,
                                self.on_say,
+                               batch=BatchConfiguration(0.0)),
+                       Message(self,
+                               u"response-to-broadcast",
+                               MemberAuthentication(),
+                               PublicResolution(),
+                               DirectDistribution(),
+                               CandidateDestination(),
+                               SayToOthersPayload(),
+                               self._generic_timeline_check,
+                               self.on_response_to_broadcast,
                                batch=BatchConfiguration(0.0))
                        ]
         messages.extend(ourmessages)
@@ -63,15 +75,59 @@ class SayToEachCommunity(Community):
 
     def on_say(self, messages):
         for message in messages:
-            # self.guestbook.append( message.payload.who + " say : " + message.payload.text )
-            print("%s say to me at %d: %s"%(message.payload.who, self.start_time, message.payload.text))
+            self.guestbook.append( message.payload.who + " say : " + message.payload.text )
 
-    def say_to_others(self, msg):
-        meta = self.get_meta_message(u"say-to-others")
+    def on_say_broadcast(self, messages):
+        for message in messages:
+            print("%s say to me at %d: %s"%(message.payload.who, time()-self.start_time, message.payload.text))
+            self.logger.info("Received broadcast from node %s for sequence number %d",
+                             message.candidate.get_member().public_key.encode("hex")[-8:],
+                             message.payload.requested_sequence_number)
+            # self.guestbook.append( message.payload.who + " say : " + message.payload.text )
+
+        # response to broadcast
+        meta = self.get_meta_message(u"response-to-broadcast")
+        message = meta.impl(authentication=(self._my_member,),
+                            distribution=(self.claim_global_time(),),
+                            destination=(message.candidate,),
+                            payload=(self.my_member.__str__(), ""))
+        self.dispersy.store_update_forward([message], False, False, True)
+
+    def on_response_to_broadcast(self, messages):
+        for message in messages:
+            # self.logger.info("Received response_to_broadcast from node %s for sequence number %d",
+            #                  message.candidate.get_member().public_key.encode("hex")[-8:],
+            #                  message.payload.requested_sequence_number)
+            if (message.payload.who) in self._response_dict:
+                print("rereceived broadcast reponse")
+            else:
+                self._response_dict[message.payload.who] = True
+                self._response_to_broadcast_ct += 1
+            # print("%s say to me at %d: %s"%(message.payload.who, self.start_time, message.payload.text))
+
+    @property
+    def response_to_broadcast_ct(self):
+        return self._response_to_broadcast_ct
+
+    def say_broadcast(self, msg):
+        self._response_to_broadcast_ct = 0
+        self._response_dict = {}
+        meta = self.get_meta_message(u"say-broadcast")
         message = meta.impl(authentication=(self._my_member,),
                             distribution=(self.claim_global_time(),),
                             payload=(self.my_member.__str__(), msg))
+        print("broadcast at %d"%(time()-self.start_time))
         self.dispersy.store_update_forward([message], False, False, True)
+
+    def say_to_locals(self):
+        meta = self.get_meta_message(u"say-to-locals")
+        messages = []
+        for candidate in self.dispersy_yield_verified_candidates():
+            messages.append(meta.impl(authentication=(self._my_member,),
+                                      distribution=(self.claim_global_time(),),
+                                      destination=(candidate,),
+                                      payload=(self.my_member.__str__(), "hello")))
+        self.dispersy.store_update_forward(messages, False, False, True)
 
     def write_down_neighbors(self):
         # veris = self.dispersy_yield_verified_candidates()
@@ -93,15 +149,7 @@ class SayToEachCommunity(Community):
         print "%d : <Total candidates : %d, walk node: %d, stumble node: %d, intro node %d, discovered node: %d, timeout node: %d>"%(now - self.start_time, self._candidates.__len__(), walk_ct, stumble_ct, intro_ct, dis_ct, timeout_ct)
         
 
-    def say_to_locals(self):
-        meta = self.get_meta_message(u"say-to-locals")
-        messages = []
-        for candidate in self.dispersy_yield_verified_candidates():
-            messages.append(meta.impl(authentication=(self._my_member,),
-                                      distribution=(self.claim_global_time(),),
-                                      destination=(candidate,),
-                                      payload=(self.my_member.__str__(), "hello")))
-        self.dispersy.store_update_forward(messages, False, False, True)
+
 
 class SayToOthersPayload(Payload):
     class Implementation(Payload.Implementation):
@@ -127,12 +175,17 @@ class SayToEachCommunityConversion(BinaryConversion):
         super(SayToEachCommunityConversion, self).__init__(community, "\x01")
         self.define_meta_message(
             chr(1),
-            community.get_meta_message(u"say-to-others"),
+            community.get_meta_message(u"say-broadcast"),
             self._encode_say,
             self._decode_say)
         self.define_meta_message(
             chr(2),
             community.get_meta_message(u"say-to-locals"),
+            self._encode_say,
+            self._decode_say)
+        self.define_meta_message(
+            chr(3),
+            community.get_meta_message(u"response-to-broadcast"),
             self._encode_say,
             self._decode_say)
 

@@ -31,10 +31,11 @@
 
 @5:21 write_down_neighbors
 
-@5:30 say_to_others {21-25}
+@5:30 say_broadcast {21-25}
 
 @6:21 write_down_neighbors
 @7:21 write_down_neighbors
+@7:22 write_down_response_to_broadcast
 
 @8:00 stop_session
 @8:05 stop

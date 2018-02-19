@@ -46,8 +46,8 @@ class SayToEachModule(CommunityExperimentModule):
         self.dispersy_provider.custom_community_loader = SayToEachCommunityLoader(self.dispersy_provider.session_id)
 
     @experiment_callback
-    def say_to_others(self):
-        self.community.say_to_others("I am "+str(self.my_id))
+    def say_broadcast(self):
+        self.community.say_broadcast("I am "+str(self.my_id))
 
     @experiment_callback
     def say_to_locals(self):
@@ -65,6 +65,10 @@ class SayToEachModule(CommunityExperimentModule):
     @experiment_callback
     def write_down_neighbors(self):
         self.community.write_down_neighbors()
+
+    @experiment_callback
+    def write_down_response_to_broadcast(self):
+        print("response_to_broadcast_ct: %d" % self.community.response_to_broadcast_ct)
 
     @experiment_callback
     def print_myself(self):

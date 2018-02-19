@@ -33,5 +33,9 @@
 @5:21 write_down_neighbors
 @6:22 write_down_response_to_broadcast
 
-@7:00 stop_session
-@7:05 stop
+@14:00 write_down_neighbors
+@14:01 response_to_broadcasts
+@15:22 write_down_response_to_broadcast
+
+@16:00 stop_session
+@16:05 stop

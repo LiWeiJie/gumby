@@ -87,7 +87,7 @@ class SayToEachCommunity(Community):
                              ))
             # response to broadcast
             self._broadcaster.append(message.candidate)
-            self.say_response_to_broadcast(message.candidate, "")
+            # self.say_response_to_broadcast(message.candidate, "")
 
             # self.guestbook.append( message.payload.who + " say : " + message.payload.text )
 

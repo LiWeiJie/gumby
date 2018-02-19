@@ -103,6 +103,11 @@ class ExperimentClient(object, LineReceiver):
         self.scenario_runner.set_peernumber(self.my_id)
 
         my_dir = path.join(environ['OUTPUT_DIR'], str(self.my_id))
+
+        self._logger.warning("environ['OUTPUT_DIR']: %s", environ['OUTPUT_DIR'])
+        self._logger.warning("my_id: %s", str(self.my_id))
+        self._logger.warning("my_dir: %s", my_dir)
+
         if path.exists(my_dir):
             self._logger.warning("Output directory already exists, should you clean before experiment? (%s)", my_dir)
         else:

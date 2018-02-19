@@ -1,28 +1,33 @@
 &module gumby.modules.dispersy_module.DispersyModule
 &module experiments.say_to_each.say_to_each_module.SayToEachModule
 
-@0 isolate_community SayToEachCommunity {1-19}
-@1 start_session {1-19}
-@15 reset_dispersy_statistics {1-19}
-@15 annotate start-experiment {1-19}
+@0 isolate_community SayToEachCommunity {1-20, 31-1000}
+@1 start_session {1-20, 31-1000}
+@15 reset_dispersy_statistics {1-20, 31-1000}
+@15 annotate start-experiment {1-20, 31-1000}
 
-@20 print_myself
-@20 write_down_neighbors
+@20 print_myself {1-20, 31-1000}
+@20 write_down_neighbors {1-20, 31-1000}
 
-@21 introduce_peers
-@1:21 write_down_neighbors
-@2:21 write_down_neighbors
-@3:21 write_down_neighbors
+@21 introduce_peers {1-20, 31-1000}
+@1:21 write_down_neighbors {1-20, 31-1000}
+@2:21 write_down_neighbors {1-20, 31-1000}
+@3:21 write_down_neighbors {1-20, 31-1000}
 
-@3:25 isolate_community SayToEachCommunity {20}
-@3:26 start_session {20}
-@3:40 reset_dispersy_statistics {20}
-@3:40 annotate start-experiment {20}
+@3:25 isolate_community SayToEachCommunity {21-30}
+@3:26 start_session {21-30}
+@3:40 reset_dispersy_statistics {21-30}
+@3:40 annotate start-experiment {21-30}
 
 @4:00 print_myself
 @4:00 write_down_neighbors
 
-@4:21 introduce_peers {20}
+@4:21 introduce_peers {21-30}
+
+@4:10 introduce_peers
+@4:20 introduce_peers
+@4:30 introduce_peers
+@4:40 introduce_peers
 
 @5:21 write_down_neighbors
 @6:21 write_down_neighbors

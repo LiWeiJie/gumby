@@ -73,7 +73,7 @@ class SayToEachModule(CommunityExperimentModule):
 
     @experiment_callback
     def response_to_broadcasts(self):
-        print("response_to_broadcasters at %d: %d", time()-self.community.start_time, self.community._broadcaster.__len__())
+        print("response_to_broadcasters at %d: %d"%(time()-self.community.start_time, self.community._broadcaster.__len__()))
         for candidate in self.community._broadcaster:
             self.community.say_response_to_broadcast(candidate, "")
 

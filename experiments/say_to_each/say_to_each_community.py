@@ -80,9 +80,10 @@ class SayToEachCommunity(Community):
     def on_say_broadcast(self, messages):
         for message in messages:
             print("%s say to me at %d: %s"%(message.payload.who, time()-self.start_time, message.payload.text))
-            self.logger.info("Received broadcast from node %s for sequence number %d",
+            print("Received broadcast from node %s for sequence number %d"%(
                              message.candidate.get_member().public_key.encode("hex")[-8:],
-                             message.payload.requested_sequence_number)
+                             message.payload.requested_sequence_number))
+
             # self.guestbook.append( message.payload.who + " say : " + message.payload.text )
 
         # response to broadcast

@@ -74,18 +74,22 @@ class SayToEachCommunity(Community):
 
     def write_down_neighbors(self):
         # veris = self.dispersy_yield_verified_candidates()
-        walk_ct = stumble_ct = intro_ct = 0
+        walk_ct = stumble_ct = intro_ct = dis_ct = timeout_ct =0
         now = time()
         for candidate in self._candidates.itervalues():
             cate = candidate.get_category(now)
-            if cate in (u"walk"):
+            if cate == u"walk":
                 walk_ct += 1
-            elif cate in (u"stumble"):
+            elif cate == u"stumble":
                 stumble_ct += 1
-            elif cate in (u"intro"):
+            elif cate == u"intro":
                 intro_ct += 1
+            elif cate == u"discovered":
+                dis_ct += 1
+            else:
+                timeout_ct += 1
 
-        print "%d : <Total candidates : %d, walk node: %d, stumble node: %d, intro node: %d>"%(now - self.start_time, self._candidates.__len__(), walk_ct, stumble_ct, intro_ct)
+        print "%d : <Total candidates : %d, walk node: %d, stumble node: %d, intro node %d, discovered node: %d, timeout node: %d>"%(now - self.start_time, self._candidates.__len__(), walk_ct, stumble_ct, intro_ct, dis_ct, timeout_ct)
         
 
     def say_to_locals(self):

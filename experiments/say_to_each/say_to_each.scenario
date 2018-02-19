@@ -9,11 +9,16 @@
 @20 print_myself
 @20 write_down_neighbors
 
-@21 introduce_peers
-@25 write_down_neighbors
-@81 write_down_neighbors
-@142 write_down_neighbors
-@202 write_down_neighbors
+@21 introduce_peers {1-19}
+@1:21 write_down_neighbors
+@2:21 write_down_neighbors
+@3:21 write_down_neighbors
 
-@210 stop_session
-@215 stop
+@3:22 introduce_peers {20}
+
+@3:32 write_down_neighbors
+@4:32 write_down_neighbors
+@5:32 write_down_neighbors
+
+@7:00 stop_session
+@7:05 stop

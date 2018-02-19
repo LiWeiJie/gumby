@@ -28,6 +28,7 @@ class SayToEachCommunity(Community):
         self.modulus = 1000
         self.n = 5
         self.guestbook = []
+        self.start_time = time()
 
     def initiate_conversions(self):
         return [DefaultConversion(self), SayToEachCommunityConversion(self)]
@@ -84,7 +85,7 @@ class SayToEachCommunity(Community):
             elif cate in (u"intro"):
                 intro_ct += 1
 
-        print "<Total candidates : %d, walk node: %d, stumble node: %d, intro node: %d>"%(self._candidates.__len__(), walk_ct, stumble_ct, intro_ct)
+        print "%d : <Total candidates : %d, walk node: %d, stumble node: %d, intro node: %d>"%(now - self.start_time, self._candidates.__len__(), walk_ct, stumble_ct, intro_ct)
         
 
     def say_to_locals(self):

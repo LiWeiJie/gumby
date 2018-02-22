@@ -7,7 +7,7 @@
 @15 annotate start-experiment {1-20, 31-1000}
 
 @16 introduce_peers
-@20 say_broadcast
+@20 test
 
 @40 stop_session
 @50 stop

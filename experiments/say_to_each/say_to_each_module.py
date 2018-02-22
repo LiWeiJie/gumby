@@ -79,7 +79,15 @@ class SayToEachModule(CommunityExperimentModule):
 
     @experiment_callback
     def test(self):
-        pass
+        import enum
+        import ecdsa
+        print("check import")
+        ClientState = Enum('ClientState', ('wait_for_senate', 'send'))
+        sk = ecdsa.SigningKey.generate() # uses NIST192p
+        vk = sk.get_verifying_key()
+        signature = sk.sign("message")
+        assert vk.verify(signature, "message")
+        print ClientState.send
 
     @experiment_callback
     def print_myself(self):
